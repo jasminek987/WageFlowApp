@@ -1,0 +1,158 @@
+<!-- wrapper -->
+<div class="wrap">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="brand">WAGE FLOW</div>
+    <button (click)="onLogout()">Logout</button>
+  </div>
+
+  <!-- Title -->
+  <h2 class="page-title">Manager Dashboard</h2>
+
+  <!-- Loading / Error banners (expects: loading:boolean, error:string) -->
+  <div *ngIf="loading" class="banner info">Loading…</div>
+  <div *ngIf="!loading && error" class="banner error">Error: {{ error }}</div>
+
+  <!-- Toolbar -->
+  <div class="toolbar" *ngIf="!loading">
+    <label>
+      Status
+      <select class="input" [(ngModel)]="statusFilter" (change)="updateStats()">
+        <option value="pending">Pending</option>
+        <option value="approved">Approved</option>
+        <option value="all">All</option>
+      </select>
+    </label>
+
+    <label>
+      Search
+      <input
+        class="input"
+        type="text"
+        placeholder="type a name…"
+        [(ngModel)]="searchText"
+        (input)="updateStats()"
+      />
+    </label>
+
+    <button (click)="refresh()" [disabled]="loading">Refresh</button>
+    <button (click)="exportCsv()" [disabled]="loading || !filteredTimesheets.length">Export CSV</button>
+    <button (click)="openAdd()" [disabled]="loading">Add Employee</button>
+  </div>
+
+  <!-- Stats (dynamic) -->
+  <div class="stats-row" *ngIf="!loading">
+    <div class="stat-box">
+      <span class="stat-number">{{ pendingCount }}</span>
+      <span class="stat-label">Pending Timesheets</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-number">{{ totalEmployees }}</span>
+      <span class="stat-label">Total Employees</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-number">${{ shownPayroll | number:'1.0-2' }}</span>
+      <span class="stat-label">Payroll (Shown)</span>
+    </div>
+  </div>
+
+  <!-- Timesheets -->
+  <section class="card" *ngIf="!loading">
+    <div class="card-head">
+      <h3>Timesheets</h3>
+      <small class="muted">Filter: {{ statusFilter }} • Results: {{ filteredTimesheets.length }}</small>
+    </div>
+
+    <div class="table-wrap" *ngIf="filteredTimesheets.length; else noTs">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Employee</th>
+            <th>Week Start</th>
+            <th>Hours</th>
+            <th>Status</th>
+            <th style="width:1%">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- LOOP: use filteredTimesheets from TS -->
+          <tr *ngFor="let t of filteredTimesheets">
+            <td>{{ t.id }}</td>
+            <td>{{ empName(t.employeeId) }}</td>
+            <td>{{ t.weekStart }}</td>
+            <td>{{ t.hours }}</td>
+            <td>
+              <span class="badge" [class.badge-ok]="t.status==='approved'">{{ t.status }}</span>
+            </td>
+            <td>
+              <button
+                class="btn btn-small"
+                [disabled]="t.status==='approved' || loading"
+                (click)="approve(t.id)"
+                title="Approve this timesheet"
+              >
+                Approve
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #noTs>
+      <p class="hint">No timesheets match your filter/search.</p>
+    </ng-template>
+
+    <p class="hint">showing results for: Status = {{ statusFilter }}</p>
+  </section>
+
+  <!-- Employees -->
+  <section class="card" *ngIf="!loading">
+    <div class="card-head">
+      <h3>Employees</h3>
+      <small class="muted">{{ employees.length }} total</small>
+    </div>
+
+    <div class="table-wrap" *ngIf="employees.length; else noEmp">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th class="hide-sm">Email</th>
+            <th>Rate/hr</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- LOOP: show all employees from TS -->
+          <tr *ngFor="let e of employees">
+            <td>{{ e.id }}</td>
+            <td>{{ e.name }}</td>
+            <td class="hide-sm">{{ e.email }}</td>
+            <td>{{ e.rate }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #noEmp>
+      <p class="hint">No employees loaded.</p>
+    </ng-template>
+  </section>
+
+  <!-- Add Employee Modal (uses showAdd + newEmp from TS) -->
+  <div class="overlay" *ngIf="showAdd" (click)="closeAdd()"></div>
+  <div class="modal" *ngIf="showAdd">
+    <h4>Add Employee</h4>
+    <label>Name <input type="text" [(ngModel)]="newEmp.name" /></label>
+    <label>Email <input type="email" [(ngModel)]="newEmp.email" /></label>
+    <label>Rate/hr <input type="number" min="0" step="0.1" [(ngModel)]="newEmp.rate" /></label>
+    <div class="modal-actions">
+      <button (click)="closeAdd()">Cancel</button>
+      <button (click)="addEmployee()">Add</button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">© 2025 WageFlow • Manager Portal</footer>
+</div>

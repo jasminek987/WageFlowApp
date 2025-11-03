@@ -1,0 +1,16 @@
+<!-- src/app/app.component.html -->
+<header style="padding:10px; border-bottom:1px solid #eee; display:flex; gap:12px; align-items:center;">
+  <strong style="margin-right:auto;">WageFlow</strong>
+
+  <ng-container *ngIf="auth.token(); else loggedOut">
+    <a *ngIf="auth.role()==='manager'" routerLink="/manager-dashboard">Manager Dashboard</a>
+    <a *ngIf="auth.role()==='employee'" routerLink="/employee-dashboard">My Dashboard</a>
+    <button (click)="logout()">Logout</button>
+  </ng-container>
+
+  <ng-template #loggedOut>
+    <a routerLink="/login">Login</a>
+  </ng-template>
+</header>
+
+<router-outlet></router-outlet>

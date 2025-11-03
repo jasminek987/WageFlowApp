@@ -1,0 +1,77 @@
+<div class="container">
+  <div class="header">
+    <div class="logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+        <path d="M10 17l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
+      </svg>
+    </div>
+    <h1>WageFlow</h1>
+    <p class="subtitle">Streamline your payroll management</p>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Sign in to your account</h2>
+      <p class="card-description">Enter your credentials to access the dashboard</p>
+    </div>
+
+    <!-- ✅ Updated Angular form -->
+    <form (ngSubmit)="onLogin()" #loginForm="ngForm">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <div class="input-wrapper">
+          <input
+            id="email"
+            name="email"
+            type="text"
+            required
+            [(ngModel)]="email"
+            placeholder="example@company.com" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="label-row">
+          <label for="password">Password</label>
+          <a href="#" class="forgot-link" (click)="$event.preventDefault()">Forgot password?</a>
+        </div>
+        <div class="input-wrapper">
+          <input
+            id="password"
+            name="password"
+            type="password"
+            required
+            [(ngModel)]="password"
+            placeholder="••••••••" />
+        </div>
+      </div>
+
+      <!-- ❌ Role picker removed (backend sends real role) -->
+      <!-- ❌ Username removed (email login only) -->
+
+      <div class="checkbox-wrapper">
+        <input type="checkbox" id="remember" />
+        <label for="remember" class="checkbox-label">Remember me for 30 days</label>
+      </div>
+
+      <button class="btn-primary" type="submit" [disabled]="loading || !loginForm.form.valid">
+        {{ loading ? 'Signing in…' : 'Sign in' }}
+      </button>
+
+      <p *ngIf="errorMsg" class="error" style="color:#e11d48; margin-top:12px">{{ errorMsg }}</p>
+
+      <div class="demo-info">
+        <p>Demo credentials:</p>
+        <div>
+          <p><strong>Manager:</strong> manager&#64;company.com / admin</p>
+          <p><strong>Employee:</strong> employee&#64;wageflow.com / 1234</p>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="footer">
+    <p>Need help? <a href="#" (click)="$event.preventDefault()">Contact support</a></p>
+  </div>
+</div>

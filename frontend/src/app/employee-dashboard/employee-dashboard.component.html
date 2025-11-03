@@ -1,0 +1,183 @@
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">WAGE FLOW</div>
+    <button (click)="onLogout()">Logout</button>
+  </div>
+
+  <h2 class="page-title">Employee Dashboard</h2>
+
+  <p *ngIf="loading">Loading…</p>
+  <p *ngIf="!loading && error" style="color:#b91c1c">Error: {{ error }}</p>
+
+  <div class="stats-row" *ngIf="!loading && !error">
+    <div class="stat-box">
+      <span class="stat-number">{{ approvedHoursThisMonth || 0 }}</span>
+      <span class="stat-label">Approved Hours ({{ selectedMonthISO }})</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-number">{{ pendingTimesheets || 0 }}</span>
+      <span class="stat-label">Pending Timesheets</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-number">{{ payslips?.length || 0 }}</span>
+      <span class="stat-label">Total Payslips</span>
+    </div>
+  </div>
+
+  <div class="toolbar" *ngIf="!loading && !error">
+    <div class="tabs">
+      <button (click)="setTab('timesheets')" [disabled]="activeTab==='timesheets'">Timesheets</button>
+      <button (click)="setTab('payslips')"   [disabled]="activeTab==='payslips'">Payslips</button>
+      <button (click)="setTab('profile')"    [disabled]="activeTab==='profile'">Profile</button>
+    </div>
+
+    <div class="filters">
+      <label>Month
+        <input type="month" [(ngModel)]="selectedMonthISO" (change)="onMonthChange(selectedMonthISO)">
+      </label>
+
+      <label>Search
+        <input type="text" [(ngModel)]="searchText" (input)="onSearchChange(searchText)" placeholder="type…">
+      </label>
+
+      <button (click)="loadAll()">Refresh</button>
+    </div>
+  </div>
+
+  <p class="muted" *ngIf="!loading && !error && activeTab==='timesheets'">
+    <span class="badge badge-ok">approved</span> = payroll ready •
+    <span class="badge">pending</span> = awaiting manager
+  </p>
+
+  <section class="card" *ngIf="!loading && !error && activeTab==='timesheets'">
+    <div class="card-head">
+      <h3>My Timesheets</h3>
+      <small class="muted">Month: {{ selectedMonthISO }}</small>
+    </div>
+
+    <div class="muted" style="margin-bottom:.5rem;">
+      Showing {{ filteredTimesheets.length }} of {{ timesheets.length }} total
+    </div>
+
+    <div class="table-wrap" *ngIf="filteredTimesheets.length; else noTs">
+      <table class="table">
+        <thead>
+          <tr><th>Week Start</th><th>Hours</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of filteredTimesheets; trackBy: trackById">
+            <td>{{ t.weekStart }}</td>
+            <td>{{ t.hours }}</td>
+            <td><span class="badge" [class.badge-ok]="t.status==='approved'">{{ t.status }}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #noTs>
+      <p class="muted">
+        No timesheets match your filters.
+        <span *ngIf="timesheets?.length">Try changing the month (currently {{ selectedMonthISO }}) or clearing search.</span>
+      </p>
+    </ng-template>
+  </section>
+<section class="card" *ngIf="!loading && !error && activeTab==='payslips'">
+  <div class="card-head"><h3>Payslips</h3></div>
+
+  <div class="payslip-grid">
+    <!-- left: list -->
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr><th>ID</th><th>Start</th><th>End</th><th>Gross</th><th>Tax</th><th>Net</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of filteredPayslips; trackBy: trackById"
+              (click)="selectPayslip(p)"
+              [class.row-active]="selectedPayslip?.id === p.id"
+              style="cursor:pointer">
+            <td>{{ p.id }}</td>
+            <td>{{ p.start || (p.period.split(' to ')[0]) }}</td>
+            <td>{{ p.end   || (p.period.split(' to ')[1]) }}</td>
+            <td>${{ p.gross | number:'1.0-2' }}</td>
+            <td>${{ (p.tax ?? 0) | number:'1.0-2' }}</td>
+            <td><b>${{ p.net | number:'1.0-2' }}</b></td>
+          </tr>
+        </tbody>
+      </table>
+      <ng-container *ngIf="!filteredPayslips.length">
+        <p class="muted">No payslips found.</p>
+      </ng-container>
+    </div>
+
+    <!-- right: preview styled like the image -->
+    <div class="payslip-card" *ngIf="selectedPayslip as ps">
+      <div class="ps-header">
+        <h4>Monthly Payslip</h4>
+        <div class="ps-meta">
+          <div><span>Employee Name</span><b>{{ me?.name }}</b></div>
+          <div><span>Designation</span><b>—</b></div>
+          <div><span>Month & Year</span>
+            <b>{{ (ps.start || ps.period.split(' to ')[0]).slice(0,7) }}</b>
+          </div>
+        </div>
+      </div>
+
+      <table class="ps-table">
+        <thead>
+          <tr>
+            <th class="left">Earnings</th><th class="right">Amount</th>
+            <th class="left">Deduction</th><th class="right">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="left">Gross Pay</td>
+            <td class="right">{{ ps.gross | number:'1.2-2' }}</td>
+            <td class="left">Income Tax</td>
+            <td class="right">{{ (ps.tax ?? 0) | number:'1.2-2' }}</td>
+          </tr>
+          <tr>
+            <td class="left">Other Earnings</td>
+            <td class="right">0.00</td>
+            <td class="left">Other Deductions</td>
+            <td class="right">0.00</td>
+          </tr>
+          <tr class="subtotal">
+            <td class="left"><b>Total Addition</b></td>
+            <td class="right"><b>{{ ps.gross | number:'1.2-2' }}</b></td>
+            <td class="left"><b>Total Deduction</b></td>
+            <td class="right"><b>{{ (ps.tax ?? 0) | number:'1.2-2' }}</b></td>
+          </tr>
+          <tr class="net-row">
+            <td colspan="2" class="left"><b>Net Salary</b></td>
+            <td colspan="2" class="right"><b>{{ ps.net | number:'1.2-2' }}</b></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="ps-footer">
+        <div>Cheque No.: ____________ &nbsp; Name of Bank: ____________</div>
+        <div>Date: ____________</div>
+        <div class="sign-row">
+          <span>Signature of the Employee</span>
+          <span>Signature of the Director</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+  <section class="card" *ngIf="!loading && !error && activeTab==='profile'">
+    <div class="card-head"><h3>My Profile</h3></div>
+    <ng-container *ngIf="me; else noMe">
+      <p><b>Name:</b> {{ me.name }}</p>
+      <p><b>Email:</b> {{ me.email }}</p>
+      <p><b>Rate/hr:</b> ${{ me.rate }}</p>
+    </ng-container>
+    <ng-template #noMe><p class="muted">No profile loaded.</p></ng-template>
+  </section>
+
+  <footer class="footer">© 2025 WageFlow • Employee Portal</footer>
+</div>

@@ -1,0 +1,15 @@
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-family',
+  standalone: true,
+  template: `
+    <h2>Welcome to the Family Component 👨‍👩‍👧‍👦</h2>
+    <p>This is your first custom Angular component.</p>
+  `,
+  styles: [`
+    h2 { color: #007bff; margin-bottom: 0.5rem; }
+    p  { font-size: 1.1rem; color: #333; }
+  `]
+})
+export class FamilyComponent {}
