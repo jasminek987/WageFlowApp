@@ -1,0 +1,15 @@
+# Node / Angular
+node_modules/
+dist/
+build/
+.angular/
+.npm/
+# Python / Flask
+venv/
+.env
+__pycache__/
+*.pyc
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
